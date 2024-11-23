@@ -52,7 +52,7 @@ inline_buttons = InlineKeyboardMarkup(
 class UserForm(StatesGroup):
     waiting_for_name = State()
 
-# Obuna tekshiruvchi funksiya
+# Obuna tekshiruvchi funksiya 
 async def check_subscription(user_id: int):
     try:
         chat_member = await bot.get_chat_member(chat_id="-1001963360862", user_id=user_id)
@@ -268,8 +268,6 @@ Hoziroq 26,27,28- noyabr kunlari boʻlib oʻtadigan mutlaqo bepul "MEHRLI TARBIY
     )
     await callback.answer()
 
-
-
 # Foydalanuvchi ro‘yxatini ko‘rish (faqat adminlar uchun)
 @router.message(lambda message: message.text == "📋 Foydalanuvchilar ro'yxati")
 async def list_users(message: types.Message):
@@ -278,17 +276,18 @@ async def list_users(message: types.Message):
         await message.answer("Ushbu buyruq faqat adminlar uchun.")
         return
 
-    cursor.execute("SELECT full_name, username, phone_number, points FROM users")
+    # Foydalanuvchi ma'lumotlarini bazadan olish
+    cursor.execute("SELECT full_name, username, points FROM users")
     users = cursor.fetchall()
     if not users:
-        await message.answer("Hali hech kim ro'yhatdan o'tmagan!.")
+        await message.answer("Hali hech kim ro'yhatdan o'tmagan!")
         return
 
+    # Foydalanuvchi ro'yxatini shakllantirish
     response = "📋 Foydalanuvchilar ro'yxati:\n\n"
     for user in users:
-        full_name, username, phone_number, points = user
+        full_name, username, points = user
         username = f"@{username}" if username else "Noma'lum"
-        phone_number = phone_number if phone_number else "Noma'lum"
         response += f"👤 {full_name} ({username}) - {points} ball\n"
 
     await message.answer(response)
