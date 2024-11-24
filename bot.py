@@ -69,9 +69,27 @@ async def start(message: types.Message, state: FSMContext):
     inviter_id = None
     if len(args) > 1:
         inviter_id = args[1]
-    
-    
- # Kanalga obuna bo'lish haqidagi xabar
+
+    # Foydalanuvchini bazada mavjudligini tekshirish
+    cursor.execute("SELECT id FROM users WHERE id = ?", (message.from_user.id,))
+    existing_user = cursor.fetchone()
+
+    if not existing_user:  # Agar yangi foydalanuvchi bo'lsa
+        # Yangi foydalanuvchini qo'shish
+        cursor.execute("""
+            INSERT INTO users (id, full_name, username, points) 
+            VALUES (?, ?, ?, 0)
+        """, (message.from_user.id, message.from_user.full_name, message.from_user.username))
+        db.commit()
+
+        # Agar foydalanuvchi maxsus havola orqali kirgan bo'lsa
+        if inviter_id and inviter_id != str(message.from_user.id):
+            cursor.execute("SELECT id FROM users WHERE id = ?", (inviter_id,))
+            if cursor.fetchone():  # Taklif qilgan foydalanuvchi mavjud bo'lsa
+                cursor.execute("UPDATE users SET points = points + 1 WHERE id = ?", (inviter_id,))
+                db.commit()
+
+    # Kanalga obuna bo'lish haqidagi xabar
     await message.answer(
         '''
         Assalomu alaykum va rohmatullohi va barokatuh!
@@ -85,7 +103,10 @@ async def start(message: types.Message, state: FSMContext):
 👇🏻👇🏻👇🏻
         ''',
         reply_markup=inline_buttons
-    )   
+    )
+
+    
+       
     # Taklif qilgan foydalanuvchi ID'sini saqlash
     if inviter_id:
         await state.update_data(inviter_id=inviter_id)
